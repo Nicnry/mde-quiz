@@ -4,43 +4,29 @@ import { CHAPITRES } from '../../data/cours'
 import QuizEngine from '../../components/QuizEngine'
 
 export default function ChapitreQuiz() {
-  const router = useRouter()
-  const { id } = router.query
-
+  const { query } = useRouter()
+  const { id } = query
   if (!id) return null
 
-  const chapitre = CHAPITRES.find(c => c.id === id)
-  if (!chapitre) {
-    return <div style={{ color: '#e2e8f0', padding: 40, textAlign: 'center' }}>
-      Chapitre introuvable. <a href="/" style={{ color: '#7c6aff' }}>Retour</a>
-    </div>
-  }
-
-  const questions = chapitre.questions.map(q => ({
-    ...q,
-    chapitre: chapitre.titre,
-    couleur: chapitre.couleur,
-  }))
+  const ch = CHAPITRES.find(c => c.id === id)
+  if (!ch) return <div style={{ color:'#e2e8f0', padding:40, textAlign:'center' }}>Chapitre introuvable. <a href="/" style={{ color:'#7c6aff' }}>Retour</a></div>
 
   return (
     <>
-      <Head><title>{chapitre.titre} — MDE Quiz</title></Head>
+      <Head><title>{ch.titre} — MDE Quiz</title></Head>
       <QuizEngine
-        questions={questions}
-        titre={chapitre.titre}
-        emoji={chapitre.emoji}
-        couleur={chapitre.couleur}
+        questions={ch.questions}
+        titre={ch.titre}
+        emoji={ch.emoji}
+        couleur={ch.couleur}
         backHref="/"
+        theorie={ch.theorie}
       />
     </>
   )
 }
 
 export async function getStaticPaths() {
-  const paths = CHAPITRES.map(ch => ({ params: { id: ch.id } }))
-  return { paths, fallback: false }
+  return { paths: CHAPITRES.map(ch => ({ params: { id: ch.id } })), fallback: false }
 }
-
-export async function getStaticProps({ params }) {
-  return { props: {} }
-}
+export async function getStaticProps() { return { props: {} } }

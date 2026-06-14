@@ -1,49 +1,52 @@
-# 🧠 MDE Quiz — 62-41.2
+# 🧠 MDE Quiz v2 — 62-41.2
 
-Application de révision complète pour le cours **Ingénierie pilotée par les modèles de données (MDE)**.
+Application de révision **complète** du cours MDE, basée sur les documents réels du professeur Camus.
 
 ## Contenu
 
-- **~70 questions** réparties en 11 chapitres
-- **27 flashcards** avec système de mémorisation
-- **Progression sauvegardée** dans le navigateur (localStorage)
-- **Quiz par chapitre** ou quiz global mélangeant tout
+| | |
+|---|---|
+| **Questions** | ~100 questions avec explications détaillées |
+| **Flashcards** | 40 flashcards avec système de mémorisation (je sais / à revoir) |
+| **Chapitres** | 14 chapitres couvrant 100% du cours |
+| **Théorie** | Contenu textuel complet extrait des slides pour chaque chapitre |
 
-## Chapitres couverts
+## Chapitres couverts (100% du cours)
 
-1. 🏛️ Fondements MDE & Merise
-2. 🏷️ Stéréotypes & Identifiants (AID, NID, CID, M...)
-3. ⚙️ Transformation MCD → MLD-R
-4. ⚡ Modes DT vs TI
-5. 🔗 Associations Identifiantes (NID, CID, {absolute})
-6. 🧊 Contraintes Non-Déclaratives ({frozen}, {ordered}, {stability}, {nonoriented})
-7. 🔧 APIs de Tables (triggers, journalisation, audit)
-8. 🛠️ Outils VP/MVC-CD & ODM
-9. 🔄 Reverse Engineering & Consolidation
-10. 🔌 Lien de Programmation (<<LP>>)
-11. 📐 Types de Données Riches (token, word, domaines ODM)
-12. 🔁 Développement Itératif
+1. 🏛️ **Fondements MDE** — définition, référentiel, postulat générateurs
+2. 📐 **Merise & UML** — niveaux d'abstraction, forces/faiblesses, stratégie
+3. 🔵 **MVC-CD & Profil UML** — DSL, démarche VP, génération automatique
+4. 🏷️ **Stéréotypes & Identifiants** — AID, NID, CID, M, colonnes d'audit
+5. ⚙️ **Transformation MCD→MLD-R** — les 3 cas, tables associatives, dépendantes
+6. ⚡ **Modes DT vs TI** — SIMPK, {stability}, compensation PK composite
+7. 🔗 **Associations Identifiantes** — NID vs CID, {absolute}, losange ODM
+8. 🧊 **Contraintes Non-Déclaratives** — {frozen}, {ordered}, {stability}, {nonoriented}
+9. 🔧 **APIs de Tables** — triggers BIR/BUR/BDR, journalisation _JN, séquences
+10. 🟠 **Oracle Data Modeler** — notation Barker, domaines, référentiel de règles
+11. 🔄 **Reverse Engineering & Consolidation** — étapes ODM, delta SQL
+12. 🔌 **Lien de Programmation** — <<LP>>, cas Biblio, cas Botanique
+13. 📐 **Types de Données Riches** — token, word, positiveDecimal, domaines ODM
+14. 🔁 **Développement Itératif** — cycle MDE, consolidation, regénération APIs
 
-## Déploiement sur Vercel (5 minutes)
+## Déploiement Vercel (5 minutes)
 
-### Option 1 — Via GitHub (recommandé)
+### Via GitHub (recommandé)
 
-1. Crée un repo GitHub et pousse ce dossier :
 ```bash
+# 1. Initialiser git et pousser
 cd mde-quiz
 git init
 git add .
-git commit -m "Initial commit"
+git commit -m "MDE Quiz v2 — cours complet"
 git remote add origin https://github.com/TON_USERNAME/mde-quiz.git
 git push -u origin main
+
+# 2. Aller sur vercel.com → New Project → Import depuis GitHub
+# 3. Laisser tous les paramètres par défaut (Next.js détecté auto)
+# 4. Deploy → URL disponible en ~2 minutes ✅
 ```
 
-2. Va sur [vercel.com](https://vercel.com) → **New Project**
-3. Importe ton repo GitHub
-4. Laisse tous les paramètres par défaut (Next.js détecté automatiquement)
-5. Clique **Deploy** → URL disponible en 2 minutes ✅
-
-### Option 2 — Via Vercel CLI
+### Via Vercel CLI
 
 ```bash
 npm install -g vercel
@@ -60,36 +63,25 @@ npm run dev
 # → http://localhost:3000
 ```
 
-## Structure du projet
-
-```
-mde-quiz/
-├── data/
-│   └── cours.js          ← Toutes les questions et flashcards
-├── pages/
-│   ├── index.js          ← Page d'accueil
-│   ├── flashcards.js     ← Page flashcards
-│   └── quiz/
-│       ├── index.js      ← Quiz global
-│       └── [id].js       ← Quiz par chapitre
-├── components/
-│   └── QuizEngine.js     ← Moteur de quiz réutilisable
-├── styles/
-│   └── globals.css
-├── next.config.js
-└── package.json
-```
-
 ## Ajouter des questions
 
-Édite `data/cours.js` et ajoute des objets dans le tableau `questions` du chapitre voulu :
+Dans `data/cours.js`, ajouter dans le tableau `questions` du chapitre concerné :
 
 ```js
 {
-  id: "unique_id",
-  question: "Ta question ici ?",
-  choix: ["Option A", "Option B", "Option C", "Option D"],
-  reponse: 0,  // index de la bonne réponse (0 = A)
-  explication: "Explication détaillée de la réponse correcte...",
+  id: 'identifiant_unique',
+  enonce: 'Ta question ici ?',
+  choix: ['Option A', 'Option B', 'Option C', 'Option D'],
+  reponse: 0,           // index de la bonne réponse (0=A, 1=B...)
+  explication: 'Explication détaillée de la bonne réponse...',
 }
 ```
+
+## Fonctionnalités
+
+- ✅ **Progression sauvegardée** (localStorage) — reprends où tu t'es arrêté
+- 📖 **Cours intégré** — bouton "Cours" dans chaque quiz pour lire la théorie
+- 🔀 **Ordre aléatoire** — les questions sont mélangées à chaque session
+- ❌ **Historique des erreurs** — résumé des questions ratées à la fin
+- 🃏 **Flashcards avec flip** — système "je sais / à revoir"
+- 📚 **Page théorie** — lecture complète du cours par chapitre
