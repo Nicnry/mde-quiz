@@ -99,6 +99,7 @@ function NavDrawer({ open, onClose }) {
     { href:'/quiz', label:'🧠 Quiz Complet', desc:'Toutes les questions mélangées' },
     { href:'/flashcards', label:'🃏 Flashcards', desc:'40 cartes mémo' },
     { href:'/theorie', label:'📖 Cours Complet', desc:'Théorie par chapitre' },
+    { href:'/transformations', label:'🗄️ Transformations', desc:'MCD→MLD-R→MPD visuels' },
   ]
 
   return (

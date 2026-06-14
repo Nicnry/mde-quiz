@@ -90,6 +90,11 @@ export default function Home() {
                   🃏 Flashcards
                 </div>
               </Link>
+              <Link href="/transformations" style={{ display:'block' }}>
+                <div style={{ background:C.surface, color:'#e8a020', border:`1px solid #e8a02044`, padding:'15px 28px', borderRadius:12, fontWeight:700, fontSize:16, minHeight:52, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  🗄️ Transformations
+                </div>
+              </Link>
               <Link href="/theorie" style={{ display:'block' }}>
                 <div style={{ background:C.surface, color:C.text, border:`1px solid ${C.border}`, padding:'15px 28px', borderRadius:12, fontWeight:700, fontSize:16, minHeight:52, display:'flex', alignItems:'center', justifyContent:'center' }}>
                   📖 Cours
