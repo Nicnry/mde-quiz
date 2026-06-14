@@ -7,9 +7,12 @@ export default function ChapitreQuiz() {
   const { query } = useRouter()
   const { id } = query
   if (!id) return null
-
   const ch = CHAPITRES.find(c => c.id === id)
-  if (!ch) return <div style={{ color:'#e2e8f0', padding:40, textAlign:'center' }}>Chapitre introuvable. <a href="/" style={{ color:'#7c6aff' }}>Retour</a></div>
+  if (!ch) return (
+    <div style={{ color:'#e2e8f0', padding:40, textAlign:'center', fontFamily:'system-ui' }}>
+      Chapitre introuvable. <a href="/" style={{ color:'#7c6aff' }}>Retour</a>
+    </div>
+  )
 
   return (
     <>

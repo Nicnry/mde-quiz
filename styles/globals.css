@@ -1,14 +1,176 @@
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0d0f18;--surface:#13162a;--card:#181c30;--border:#252a45;
-  --accent:#7c6aff;--text:#e2e8f0;--muted:#64748b;
-  --good:#10b981;--bad:#ef4444;--warn:#f59e0b;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0f18;
+  --surface: #13162a;
+  --card: #181c30;
+  --border: #252a45;
+  --accent: #7c6aff;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --good: #10b981;
+  --bad: #ef4444;
+  --warn: #f59e0b;
+  --header-h: 56px;
 }
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;line-height:1.6}
-a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer}
-pre,code{font-family:'Fira Code','Cascadia Code',Consolas,monospace}
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:var(--surface)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+pre, code { font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Utilitaires responsive ───────────────────────────────── */
+.desktop-only { display: block; }
+.mobile-only  { display: none;  }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: block !important; }
+}
+
+/* ── Overlay burger menu ─────────────────────────────────── */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.menu-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Drawer sidebar ──────────────────────────────────────── */
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(300px, 85vw);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 100;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.drawer.open {
+  transform: translateX(0);
+  box-shadow: 8px 0 40px rgba(0,0,0,0.5);
+}
+
+.drawer-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-height: var(--header-h);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Layout théorie desktop ──────────────────────────────── */
+.theorie-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.theorie-sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 14px 10px;
+  overflow-y: auto;
+  position: sticky;
+  top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+}
+
+.theorie-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .theorie-sidebar { display: none; }
+  .theorie-content { padding: 20px 16px 80px; }
+}
+
+/* ── Grille chapitres ────────────────────────────────────── */
+.chapitres-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 14px;
+}
+@media (max-width: 600px) {
+  .chapitres-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* ── Boutons CTA hero ────────────────────────────────────── */
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+@media (max-width: 480px) {
+  .hero-actions { flex-direction: column; align-items: stretch; padding: 0 24px; }
+}
+
+/* ── Quiz choix ──────────────────────────────────────────── */
+.quiz-choice-text {
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+@media (max-width: 480px) {
+  .quiz-choice-text { font-size: 14px; }
+}
+
+/* ── Touch targets ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  button, a { min-height: 44px; }
+}
+
+/* ── Résultat erreurs scroll ─────────────────────────────── */
+.erreurs-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+@media (max-width: 480px) {
+  .erreurs-list { max-height: 150px; }
+}
