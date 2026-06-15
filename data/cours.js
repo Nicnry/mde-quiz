@@ -1036,124 +1036,293 @@ STRATÉGIES d'alimentation de la PK :
     titre: 'Oracle Data Modeler (ODM)',
     emoji: '🟠',
     couleur: COULEURS_CHAPITRES.odm,
-    description: 'Architecture, notation Barker, domaines, référentiel de règles, Design Rules',
+    description: 'Architecture, notation Barker, domaines, Design Rules, transformation, consolidation, simulation TI',
     theorie: `Oracle Data Modeler (ODM) = outil professionnel Oracle, GRATUIT, intégré à SQL Developer.
-
 Naissance : 2009 (jeunesse difficile), améliorations notables dès ~2011-2012.
-Capacités : modélisation des données, multidimensionnelle, processus (DFD), outils de transformation/génération.
 
-TERMINOLOGIE ODM (DÉSTABILISANTE par rapport au cours) :
-  • "Logical Model" dans ODM = NIVEAU CONCEPTUEL (MCD) ← attention !
-  • "Relational Model" dans ODM = NIVEAU LOGIQUE (MLD-R)
-  • "Physical Model" dans ODM = NIVEAU PHYSIQUE (MPD-R)
-  ⚠️ Dans ce cours, on utilise les termes classiques : MCD, MLD-R, MPD
+━━━ TERMINOLOGIE DÉSTABILISANTE ━━━
+  "Logical Model" ODM  = MCD (niveau conceptuel) ← ATTENTION !
+  "Relational Model" ODM = MLD-R (niveau logique)
+  "Physical Model" ODM = MPD-R (niveau physique)
+  → Dans ce cours on garde toujours MCD / MLD-R / MPD
 
-ARCHITECTURE ODM :
-  • Un Design = un projet (1 seul MCD par Design)
-  • Plusieurs subviews (diagrammes partiels) pour la lisibilité
-  • Le MCD est entier dans un diagramme implicite
-  • Un MCD → 1 ou plusieurs MLD-R
-  • Un MLD-R → 1 ou plusieurs MPD
-
-NOTATION BARKER dans ODM (≠ UML MVC-CD) :
-  • Entités = rectangles avec coins arrondis
-  • # = Primary Key (clé primaire)
-  • U = Unique (identifiant naturel NID)
-  • * = Non nul (obligatoire — comme <<M>>)
-  • o = optionnel
-  • Trait plein côté entité = cardinalité minimale 1 (obligatoire)
-  • Trait tillé côté entité = cardinalité minimale 0 (optionnel)
-  • Patte d'oie = cardinalité maximale N
-  • ◆ Losange = association identifiante (Identifying)
+━━━ NOTATION BARKER ━━━
+  # = Primary Key    U = Unique (NID)    * = Non nul (M)    o = optionnel
+  Trait tillé (--) = cardinalité min 0 | Trait plein (—) = min 1
+  Patte d'oie (<) = cardinalité max N | Trait normal = max 1
+  ◆ Losange = Identifying (association identifiante)
   ⚠️ ODM NE SUPPORTE PAS les entités associatives !
+  ⚠️ Le 'U' n'apparaît pas toujours malgré la contrainte — dysfonctionnement connu, fermer/rouvrir ODM
 
-DOMAINES dans ODM :
-  • Type de données personnalisé et réutilisable
-  • Affine un type standard (ex: limiter les valeurs autorisées)
-  • Génère une contrainte CHECK au niveau physique
-  • Exemples du cours :
-    PK_Numerique = Integer(38) → utilisé pour TOUTES les clés primaires
-    OUI_NON = Char(1) avec CHECK IN ('Y', 'N')
-  • Pourquoi Integer(38) et pas INTEGER ? → Pour éviter des faux positifs dans la consolidation (Oracle convertit INTEGER en NUMBER(38) en interne)
+━━━ PROCESSUS COMPLET DANS ODM (ÉTAPE 1 — cas Ecrisoft) ━━━
 
-RÉFÉRENTIEL DE RÈGLES dans ODM :
-  • Préférences et paramétrage
-  • Design Rules : règles de validation prédéfinies dans ODM
-  • Custom Design Rules : créer ses propres règles de validation
-  • Scripts de transformation : scripts JavaScript (moteur Nashorn/JVM) qui agissent sur les objets du référentiel
-  → L'entreprise peut vérifier automatiquement la conformité de ses modèles`,
+1. PARAMÉTRAGE DU PROJET
+   Tools > Design Rule and Transformations > Transformations
+   Exécuter le script "Heg-Arc : Prépare environnement de travail"
+   → Définit les règles de nommage : max 128 caractères, [a-z][A-Z][0-9]_
+
+2. CRÉATION DES DOMAINES (Tools > Domains Administration)
+   PK_Numerique = Logical type NUMERIC, Precision 38
+   → Pourquoi NUMERIC et pas INTEGER ? Oracle stocke INTEGER en NUMBER(38)
+     en interne → des "faux positifs" apparaissent dans la consolidation
+   OUI_NON = Logical type CHAR, Size 1, Value List : Y, N
+   → Génère une contrainte CHECK au niveau physique !
+   CTRLUSER = Logical type VARCHAR, Size 30
+   → Standardise le type des colonnes d'audit CTRLAUSER/CTRLMUSER
+
+3. CRÉATION DES ENTITÉS (Logical Model > Show)
+   Propriété "Preferred Abbreviation" = nom de la table future (ex: QUALIFICATIONS)
+   Attributs : onglet Attributes → PK coché = Primary UID, Mandatory coché = NOT NULL
+   Unique Identifier : onglet Unique Identifiers → NID (ex: NID1_QUAL sur libelle)
+   Contrainte sur attribut : Default and Constraint > Constraint > Generic Constraint
+     → Exemple : tarifHoraire > 0
+   Résultat dans ODM :
+     # * numero   (# = PK, * = obligatoire)
+     U * libelle  (U = unique, * = obligatoire)
+       * tarifHoraire
+
+4. CRÉATION DES ASSOCIATIONS
+   Bouton "New 1:N Relation" dans la barre d'outils
+   Cliquer sur l'entité PÈRE, tirer vers l'entité ENFANT
+   Propriétés de la relation :
+     - Name : nom de l'association
+     - Name on Source / Name on Target : noms des rôles
+     - Source Optional / Target Optional : cardinalités minimales
+     - Transferable (côté cible) : si DÉCOCHÉ → non-transférable ({frozen})
+     - Identifying : si COCHÉ → ◆ losange (association identifiante)
+   Afficher les rôles : menu contextuel Show > Labels
+   Afficher le cartouche : menu contextuel Show > Legend
+
+5. RÈGLES DE CONCEPTION (Design Rules)
+   Tools > Design Rule and Transformations > Design Rule
+   Design Rules : règles prédéfinies ODM
+   Custom Design Rules : règles créées par l'entreprise (ex: Heg-Arc)
+   Rule Set Heg : jeu de règles personnalisé HEG-Arc à appliquer
+   Exécution : Apply Selected sur le Rule Set
+   Corrections via double-clic sur chaque erreur (ex: shortname manquant)
+
+6. TRANSFORMATION MCD → MLD-R
+   Fenêtre "Engineer to Relational Model" (bouton >> dans la barre)
+   Options à cocher :
+     ✓ Apply name translation
+     ✓ Use preferred abbreviations
+     ✓ Apply template for FK columns
+   Cliquer "Engineer" → MLD-R créé automatiquement
+   Enrichissements post-transformation :
+     • Script "Create index on FK" → Oracle n'indexe pas les FK auto !
+     • Script "Tables to upper case - Rhino" → identifiants en majuscule
+     • Clic-droit MLD-R > Apply Naming Standards > OK → noms de contraintes
+
+7. MODÈLE PHYSIQUE (Physical Model)
+   Créer un Physical Model sous le MLD-R → Oracle Database 12cR2
+   Domaine CTRLUSER → créer AVANT de générer les APIs
+   Journalisation : dans les propriétés d'une table, Dynamic Properties
+     → Ajouter : Name = "journal", Value = "oui"
+   APIs de tables : exécuter le script
+     "Heg-Arc : Génération des APIs de table Oracle"
+   → Génère dans le modèle physique :
+     Colonnes d'audit (CTRLAUSER, CTRLADATE, CTRLMUSER, CTRLMDATE)
+     Tables journal (_JN) avec colonnes JN_OPERATION, JN_USER, JN_DATETIME...
+     Séquences (SEQ_NOMTABLE)
+     Triggers (API_BIR_xxx, API_BUR_xxx, API_BDR_xxx, API_AIR_xxx, API_AUR_xxx, API_ADR_xxx)
+     Packages (API_NOMTABLE SPEC + BODY)
+
+8. GÉNÉRATION SQL-DDL
+   Depuis le MLD-R → bouton Generate DDL (barre d'outils)
+   DDL Generation Options → tout cocher par défaut → OK
+   Résultat : CREATE TABLE + CREATE INDEX + ALTER TABLE + CREATE PACKAGE + CREATE TRIGGER + CREATE SEQUENCE
+   Exécuter dans SQL Developer par copier-coller dans votre schéma
+
+━━━ CONTRAINTE NON-TRANSFÉRABLE : LA LACUNE ODM ━━━
+   Transferable = false (côté cible) → indique la non-transférabilité
+   ⚠️ ODM ne prend PAS en charge cette contrainte dans la consolidation !
+   Les triggers de non-transférabilité NE SONT PAS générés automatiquement
+   Solution de contournement : sélectionner la table > clic-droit > DDL Preview
+   → Récupérer le trigger FKNTM_NOMTABLE_BEFORE manuellement et l'exécuter
+   Exemple du trigger généré :
+     CREATE OR REPLACE TRIGGER FKNTM_REALISATIONS_BEFORE
+     UPDATE OF COL_NUMERO_PAR, MAN_NUMERO_POUR ON REALISATIONS
+     BEGIN
+       RAISE_APPLICATION_ERROR(-20225, 'Non Transferable FK constraint violated');
+     END;
+
+━━━ SIMULATION D'ENTITÉ ASSOCIATIVE (MODE TI DANS ODM) ━━━
+   ODM ne supporte pas le mode TI nativement (applique toujours DT)
+   Pour obtenir une table indépendante (ex: Realisation entre Mandat et Collaborateur) :
+   1. Créer une entité Realisation avec son propre AID (numero PK, nbHeures)
+      shortname : REAL, preferred abbreviations : REALISATIONS
+   2. Créer deux associations PÈRE-FILS NON-TRANSFÉRABLES :
+      • Mandat (0..*) ——pour——> (1..1) Realisation [Transferable = false côté Realisation]
+      • Collaborateur (0..*) ——par——> (1..1) Realisation [Transferable = false côté Realisation]
+   3. Créer un Unique Identifier nommé REAL_SIMPK sur les deux FK de Realisation
+      Onglet "Attributes and Relations" → ajouter les deux relations FK
+   → Résultat MLD-R :
+      REALISATIONS(NUMERO PK, COL_NUMERO_PAR FK NOT NULL, MAN_NUMERO_POUR FK NOT NULL,
+                   NBHEURES, CTRLAUSER, CTRLADATE, CTRLMUSER, CTRLMDATE)
+      UK_REAL_SIMPK(COL_NUMERO_PAR, MAN_NUMERO_POUR)
+   Questions du prof sur la simulation :
+     • Sur quelle(s) colonne(s) est basée la PK ? → NUMERO (AID simple)
+     • Comment est garanti le produit cartésien ? → UK_REAL_SIMPK (unique identifier)
+     • Pourquoi les 2 FK sont-elles obligatoires ? → cardinalités min 1 côté Realisation
+     • Pourquoi non-transférables ? → simule {frozen} sur FK = une réalisation ne change pas de mandat/collaborateur
+
+━━━ MÉCANISME DE CONSOLIDATION DANS ODM ━━━
+   But : synchroniser le modèle ODM avec la base Oracle réelle
+   Déclenchement : bouton flèche → dans la barre du MLD-R
+   Fenêtre "Data Dictionary Connections" :
+     - Redirect Connection : choisir la connexion AGL
+     - ⚠️ Ne PAS cocher "Use Source Schema", "Use Source Object", etc.
+   Fenêtre "Compare Models" (gauche = modèle, droite = base Oracle) :
+     - Montre toutes les différences détectées
+     - Cocher/décocher ce qu'on veut inclure dans le delta
+   Bouton DDL Preview → voir le SQL de delta avant d'exécuter
+   Bouton Merge → générer et appliquer le delta directement
+   ⚠️ Les APIs de tables (triggers) ne sont PAS générées par la consolidation
+      → Les générer séparément via Generate DDL en ne sélectionnant que Packages + Triggers`,
     questions: [
       {
         id: 'od1',
-        enonce: "Dans ODM, le 'Logical Model' correspond à quel niveau dans notre terminologie MDE ?",
+        enonce: "Dans ODM, 'Logical Model' correspond à quoi dans notre terminologie ? Pourquoi est-ce déstabilisant ?",
         choix: [
-          "Au niveau Logique (MLD-R) — c'est logique !",
-          "Au niveau Conceptuel (MCD) — terme contre-intuitif mais c'est ainsi dans ODM",
-          "Au niveau Physique (MPD-R)",
-          "C'est un niveau supplémentaire propre à ODM, entre conceptuel et logique",
+          "Au MLD-R (niveau logique) — c'est cohérent avec son nom",
+          "Au MCD (niveau conceptuel) — contre-intuitif car 'Logical' fait penser à logique, mais ODM nomme ainsi le niveau conceptuel",
+          "Au MPD-R (niveau physique)",
+          "C'est un niveau supplémentaire propre à ODM",
         ],
         reponse: 1,
-        explication: "ODM utilise une terminologie décalée : 'Logical Model' = MCD (conceptuel), 'Relational Model' = MLD-R (logique), 'Physical Model' = MPD. C'est mentionné dans les slides comme 'terminologie quelque peu déstabilisante'. Dans ce cours, on ignore cette terminologie et on utilise toujours MCD/MLD-R/MPD pour éviter la confusion.",
+        explication: "ODM nomme 'Logical Model' ce qui correspond au MCD (niveau conceptuel = Entités, Relations en notation Barker). Le MLD-R correspond au 'Relational Model' et le MPD au 'Physical Model'. Le prof insiste sur ce point car c'est une source de confusion fréquente. Dans ce cours, on continue à dire MCD/MLD-R/MPD.",
       },
       {
         id: 'od2',
-        enonce: "Dans la notation Barker d'ODM, que signifient les symboles # U * o devant un attribut ?",
+        enonce: "Dans ODM, pourquoi faut-il créer le domaine PK_Numerique = NUMERIC(38) plutôt que d'utiliser INTEGER directement ?",
         choix: [
-          "# = Obligatoire, U = Unique, * = Calculé, o = Optionnel",
-          "# = Primary Key, U = Unique (identifiant naturel), * = Non nul (obligatoire), o = Optionnel (peut être NULL)",
-          "# = Foreign Key, U = Unique, * = Mandatory, o = Optional",
-          "Ce sont des décorations esthétiques sans signification fonctionnelle",
+          "INTEGER est limité à 32 bits dans Oracle",
+          "Oracle stocke INTEGER en NUMBER(38) en interne. Lors de la consolidation, ODM voit une différence entre 'INTEGER' (modèle) et 'NUMBER(38)' (base) → génère des ALTER TABLE inutiles (faux positifs)",
+          "NUMERIC est plus rapide qu'INTEGER pour les calculs Oracle",
+          "C'est une convention esthétique du cours HEG-Arc",
         ],
         reponse: 1,
-        explication: "Notation Barker dans ODM : # précède la PK (Primary Key), U précède un attribut Unique (NID), * précède un attribut obligatoire (NOT NULL, équivalent de <<M>>), o précède un attribut optionnel (peut être NULL). On peut combiner : 'U *' sur Matricule = Unique ET Non Nul. '# *' sur Numero = PK ET Non Nul.",
+        explication: "C'est un point technique crucial pour la consolidation. Si le modèle dit INTEGER et Oracle stocke NUMBER(38), la consolidation détecte une 'différence' et génère un ALTER TABLE inutile à chaque itération. En définissant PK_Numerique = NUMERIC(38), les deux sont alignés et la consolidation ne génère rien pour les PK existantes.",
       },
       {
         id: 'od3',
-        enonce: "Pourquoi ODM ne supporte-t-il pas les entités associatives ? Quelle est la conséquence ?",
+        enonce: "Dans ODM, quelle propriété d'une entité détermine le nom de la table générée dans le MLD-R ?",
         choix: [
-          "C'est un bug ODM qui sera corrigé dans la prochaine version",
-          "La notation Barker sur laquelle se base ODM ne prévoit pas les entités associatives. Conséquence : pour modéliser une table associative indépendante (mode TI), on doit dénaturer le MCD en créant une entité avec AID et des associations père-fils",
-          "Les entités associatives ne sont pas utilisées dans les bases Oracle",
-          "ODM les supporte mais sous un nom différent ('junction entity')",
+          "Le champ 'Name' de l'entité",
+          "Le champ 'Short Name' de l'entité",
+          "Le champ 'Preferred Abbreviation' de l'entité",
+          "Le champ 'Synonym' de l'entité",
         ],
-        reponse: 1,
-        explication: "La notation Barker (héritée de Oracle UK) ne comporte pas le concept d'entité associative. Dans VP+MVC-CD, on peut dessiner une entité avec stéréotype d'association. Dans ODM, une association N:N est représentée directement avec une relation, et ODM la transforme automatiquement en table associative DT. Pour TI : on crée une entité Realisation avec numero AID + deux relations père-fils non-transférables.",
+        reponse: 2,
+        explication: "Dans ODM, c'est le 'Preferred Abbreviation' qui donne le nom de la table lors de la transformation MCD→MLD-R (quand l'option 'Use preferred abbreviations' est cochée). Exemple : entité 'Qualification' avec Preferred Abbreviation 'QUALIFICATIONS' → table QUALIFICATIONS. Si ce champ est vide, ODM utilise une dérivation du nom de l'entité.",
       },
       {
         id: 'od4',
-        enonce: "Pourquoi utilise-t-on le domaine PK_Numerique = Integer(38) plutôt qu'INTEGER dans ODM ?",
+        enonce: "Lors de la transformation MCD→MLD-R dans ODM (Engineer to Relational Model), quelles options faut-il cocher ?",
         choix: [
-          "Pour limiter les valeurs négatives sur les clés primaires",
-          "Pour éviter des faux positifs dans le mécanisme de consolidation : Oracle stocke INTEGER comme NUMBER(38) en interne, ce qui crée des 'différences fantômes' entre le modèle (INTEGER) et la base (NUMBER(38))",
-          "Parce qu'INTEGER ne supporte pas les valeurs au-dessus de 2147483647",
-          "Pour raisons de standardisation entre plusieurs schémas Oracle",
+          "Cocher uniquement 'Engineer Coordinates' et fermer",
+          "Cocher 'Apply name translation', 'Use preferred abbreviations' et 'Apply template for FK columns' — puis cliquer Engineer",
+          "Tout décocher pour garder les noms par défaut d'ODM",
+          "Cocher 'Use Data Type Kind Property in Compare Functionality' uniquement",
         ],
         reponse: 1,
-        explication: "Si on définit le type INTEGER dans ODM et qu'Oracle le stocke en NUMBER(38), lors de la consolidation ODM compare 'INTEGER (modèle)' avec 'NUMBER(38) (base)' et détecte une différence → génère un ALTER TABLE inutile. En définissant directement PK_Numerique = INTEGER(38), ODM et Oracle sont d'accord sur le type → pas de faux delta dans la consolidation.",
+        explication: "Les 3 options essentielles : 'Apply name translation' (utilise les règles de nommage), 'Use preferred abbreviations' (utilise le Preferred Abbreviation pour nommer les tables), 'Apply template for FK columns' (nomme les colonnes FK selon les templates définis). Sans ces options, les noms générés ne suivent pas les standards HEG-Arc.",
       },
       {
         id: 'od5',
-        enonce: "Qu'est-ce qu'un 'script de transformation' dans le Référentiel de règles d'ODM ?",
+        enonce: "Comment créer un index sur les clés étrangères dans ODM et pourquoi est-ce nécessaire ?",
         choix: [
-          "Un script SQL de migration entre deux versions de la base",
-          "Un script JavaScript (moteur Nashorn/JVM) qui accède à l'API ODM pour manipuler les objets du référentiel — permet d'automatiser des transformations comme générer les APIs de tables, appliquer des règles de nommage, créer des index...",
-          "Un script de sauvegarde du projet ODM",
-          "Un script de génération de documentation automatique",
+          "ODM crée automatiquement les index sur FK — rien à faire",
+          "Via le script de transformation 'Create index on FK' — car Oracle n'indexe pas automatiquement les colonnes FK contrairement à certains autres SGBD",
+          "Via ALTER TABLE dans SQL Developer après la génération",
+          "Via la propriété 'Index' dans les paramètres de chaque colonne FK",
         ],
         reponse: 1,
-        explication: "ODM intègre le moteur JavaScript Oracle Nashorn (JVM). Les scripts de transformation peuvent lire et modifier tous les objets du référentiel (tables, colonnes, contraintes, relations...). Dans ce cours, le script 'Heg-Arc : Prépare environnement de travail' configure les règles de nommage. D'autres scripts génèrent les APIs de tables, créent des index FK, mettent les identifiants en majuscule. C'est ce qui pallie les lacunes natives d'ODM.",
+        explication: "Oracle n'indexe PAS automatiquement les colonnes FK (contrairement à MySQL par exemple). Sans index sur les FK, les jointures sont lentes et les performances se dégradent. ODM fournit un script de transformation 'Create index on FK' dans Custom Transformations Scripts qu'il faut exécuter manuellement après la transformation.",
       },
       {
         id: 'od6',
-        enonce: "Dans ODM, qu'est-ce qu'une 'subview' et quel est son intérêt ?",
+        enonce: "Comment activer la journalisation (_JN) pour une table dans ODM ?",
         choix: [
-          "Une vue SQL (VIEW) créée automatiquement dans Oracle",
-          "Un diagramme partiel du modèle — affiche un sous-ensemble de tables pour améliorer la lisibilité, sans modifier le modèle global",
-          "Un sous-projet à l'intérieur d'un Design",
-          "Une copie de sauvegarde du MLD-R",
+          "En cochant une case 'Journalization' dans les propriétés de la table",
+          "Dans les propriétés de la table, onglet Dynamic Properties, ajouter Name='journal', Value='oui' — puis exécuter le script APIs de tables",
+          "En créant manuellement la table _JN dans le MLD-R",
+          "La journalisation est activée automatiquement pour toutes les tables",
         ],
         reponse: 1,
-        explication: "Un projet ODM peut avoir des dizaines de tables. La subview permet de n'afficher que les tables pertinentes pour un sous-système. Exemple : une subview 'Tables métier' n'affiche que les tables business sans les _JN. Modifier une table dans une subview modifie le modèle global — c'est juste une vue filtée. On peut créer autant de subviews que nécessaire.",
+        explication: "ODM gère la journalisation via une Dynamic Property personnalisée. Dans les propriétés de la table (Table Properties > Dynamic Properties) : ajouter Name='journal', Value='oui'. Ensuite, le script 'Heg-Arc : Génération des APIs de table Oracle' lit cette propriété et génère la table NOMTABLE_JN avec les colonnes JN_OPERATION, JN_USER, JN_DATETIME, JN_SESSION, JN_APPL.",
+      },
+      {
+        id: 'od7',
+        enonce: "Dans ODM, que représente 'Transferable = false (décoché)' côté cible d'une relation, et quelle est la LIMITE majeure ?",
+        choix: [
+          "La relation est optionnelle — aucune limite",
+          "La relation est non-transférable ({frozen} sur la FK), MAIS ODM ne génère PAS le trigger correspondant dans la consolidation — il faut le récupérer manuellement via DDL Preview",
+          "La relation sera supprimée lors de la prochaine transformation",
+          "La cardinalité maximale passe à 1",
+        ],
+        reponse: 1,
+        explication: "Transferable = false modélise la non-transférabilité ({frozen} sur la FK). C'est la limitation la plus importante d'ODM signalée dans le cours : 'ODM ne prend pas encore en compte les contraintes de clé étrangères non-transférables dans le mécanisme de consolidation.' → Les triggers FKNTM_NOMTABLE_BEFORE ne sont PAS générés. Solution : sélectionner la table > DDL Preview > copier le trigger > l'exécuter dans le schéma.",
+      },
+      {
+        id: 'od8',
+        enonce: "Comment simuler une entité associative (mode TI) dans ODM pour l'entité Realisation entre Mandat et Collaborateur ?",
+        choix: [
+          "Créer une entité associative via le menu Entity > Associative",
+          "Créer une entité Realisation avec son propre AID (numero PK), puis deux associations père-fils NON-TRANSFÉRABLES vers Mandat et Collaborateur, et un Unique Identifier REAL_SIMPK sur les deux FK",
+          "Faire une association N:N directe entre Mandat et Collaborateur — ODM génère automatiquement le mode TI",
+          "Ajouter la propriété 'TI=true' dans les Dynamic Properties de l'entité",
+        ],
+        reponse: 1,
+        explication: "ODM applique toujours le mode DT nativement. Pour simuler TI : (1) Créer entité Realisation avec numero (PK, AID) et nbHeures. (2) Deux associations père-fils avec Mandat (role: pour) et Collaborateur (role: par), Transferable=false côté Realisation. (3) Unique Identifier 'REAL_SIMPK' sur les deux FK issues des relations. Résultat : table REALISATIONS avec PK simple + contrainte unique sur (COL_NUMERO_PAR, MAN_NUMERO_POUR).",
+      },
+      {
+        id: 'od9',
+        enonce: "Qu'est-ce qu'une Custom Design Rule dans ODM et quel exemple est utilisé dans le cours ?",
+        choix: [
+          "Une règle SQL qui vérifie l'intégrité des données",
+          "Une règle de validation créée par le développeur (en JavaScript/Nashorn) pour vérifier les standards d'entreprise — dans le cours : Rule Set 'heg' vérifie que les entités ont un ShortName, que les PK utilisent le domaine PK_Numerique, etc.",
+          "Une règle qui définit les types de données autorisés",
+          "Une règle qui contrôle les droits d'accès aux tables",
+        ],
+        reponse: 1,
+        explication: "Les Custom Design Rules sont des règles de validation personnalisées (scripts JavaScript via Nashorn) accessibles dans Tools > Design Rule and Transformations > Custom Rule. Le Rule Set 'heg' du cours contient par exemple : 'Heg-Arc / MCD : ShortName obligatoire', 'Heg-Arc / MCD : PK', 'Heg-Arc / MCD : Attribut sans taille/précision'. On peut aussi corriger les erreurs directement via double-clic dans la liste des erreurs.",
+      },
+      {
+        id: 'od10',
+        enonce: "Comment générer les APIs de tables (triggers et packages) avec ODM et pourquoi faut-il les générer séparément de la consolidation ?",
+        choix: [
+          "Via le mécanisme de consolidation qui génère tout automatiquement",
+          "Via le script 'Heg-Arc : Génération des APIs de table Oracle', puis Generate DDL en ne sélectionnant que Packages et Triggers — car la consolidation ne génère pas les triggers des APIs",
+          "Via SQL Developer en écrivant les packages manuellement",
+          "Les APIs sont générées automatiquement lors de la création du Physical Model",
+        ],
+        reponse: 1,
+        explication: "La consolidation gère les tables, index, séquences — mais PAS les triggers des APIs ni les packages. Il faut : (1) Exécuter le script 'Heg-Arc : Génération des APIs de table Oracle' pour remplir le Physical Model avec les APIs. (2) Generate DDL depuis le MLD-R en ne cochant QUE 'Packages' et l'onglet 'Triggers' (tout sélectionner). (3) Exécuter ce DDL dans le schéma. Ces sont des CREATE OR REPLACE → sûr de regénérer à chaque itération.",
+      },
+      {
+        id: 'od11',
+        enonce: "Lors du mécanisme de consolidation dans ODM, que montre la fenêtre Compare Models et quelles options NE FAUT-IL PAS cocher ?",
+        choix: [
+          "Elle montre les tables en doublon ; il faut cocher 'Use Source Schema'",
+          "Elle montre toutes les différences entre le modèle ODM (gauche) et la base Oracle (droite) ; NE PAS cocher 'Use Source Schema', 'Use Source Object', 'Synchronize the Whole Schema'",
+          "Elle ne montre que les tables nouvelles ; cocher toutes les options pour un résultat complet",
+          "Elle génère automatiquement le SQL sans rien demander",
+        ],
+        reponse: 1,
+        explication: "La fenêtre Compare Models est le cœur de la consolidation. Gauche = référentiel ODM (modèle). Droite = base Oracle réelle. Les cases à décocher : 'Use Source Connection As Filter', 'Use Source Schema', 'Use Source Object', 'Synchronize the Whole Schema' — sinon ODM compare avec des filtres incorrects. Laisser uniquement 'Exclude Remote Objects when synchronize Database with Model'. Puis DDL Preview pour voir le delta avant d'appliquer.",
+      },
+      {
+        id: 'od12',
+        enonce: "Après la transformation MCD→MLD-R dans ODM, quelles sont les TROIS actions complémentaires à effectuer pour obtenir un MLD-R conforme aux standards HEG-Arc ?",
+        choix: [
+          "Sauvegarder, fermer, rouvrir",
+          "Exécuter le script 'Create index on FK' + relancer 'Apply Naming Standards' sur le MLD-R + exécuter le script 'Tables to upper case - Rhino'",
+          "Générer directement le SQL-DDL sans étapes intermédiaires",
+          "Créer manuellement les contraintes NOT NULL manquantes",
+        ],
+        reponse: 1,
+        explication: "Après Engineer to Relational Model, trois étapes complémentaires sont nécessaires : (1) Script 'Create index on FK' → crée les index sur les colonnes FK. (2) Clic-droit sur MLD-R > Apply Naming Standards to Keys and Constraints > OK → applique les templates de nommage aux contraintes. (3) Script 'Tables to upper case - Rhino' → met tous les identifiants en MAJUSCULES (Oracle est case-insensitive mais convention). Ces étapes transforment le MLD-R 'brut' en MLD-R conforme.",
       },
     ],
   },

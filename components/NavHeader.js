@@ -100,6 +100,7 @@ function NavDrawer({ open, onClose }) {
     { href:'/flashcards', label:'🃏 Flashcards', desc:'40 cartes mémo' },
     { href:'/theorie', label:'📖 Cours Complet', desc:'Théorie par chapitre' },
     { href:'/transformations', label:'🗄️ Transformations', desc:'MCD→MLD-R→MPD visuels' },
+    { href:'/odm', label:'🟠 Guide ODM', desc:'Processus complet étape par étape' },
   ]
 
   return (

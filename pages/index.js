@@ -90,6 +90,11 @@ export default function Home() {
                   🃏 Flashcards
                 </div>
               </Link>
+              <Link href="/odm" style={{ display:'block' }}>
+                <div style={{ background:C.surface, color:'#f97316', border:`1px solid #f9731644`, padding:'15px 28px', borderRadius:12, fontWeight:700, fontSize:16, minHeight:52, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  🟠 Guide ODM
+                </div>
+              </Link>
               <Link href="/transformations" style={{ display:'block' }}>
                 <div style={{ background:C.surface, color:'#e8a020', border:`1px solid #e8a02044`, padding:'15px 28px', borderRadius:12, fontWeight:700, fontSize:16, minHeight:52, display:'flex', alignItems:'center', justifyContent:'center' }}>
                   🗄️ Transformations
